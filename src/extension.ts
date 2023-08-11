@@ -1,55 +1,83 @@
 import * as vscode from 'vscode';
+import { getColors } from './utilities';
+import { HSL_PATTERN } from './constants';
+import { registerListeners } from './listeners';
 
+let extensionIsActive = false;
+let decorationTypes: vscode.TextEditorDecorationType[] = [];
 export function activate(context: vscode.ExtensionContext) {
+  // Create a status bar item with alignment and priority
+  const statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
+
+  // Set text and tooltip
+  statusBarItem.text = 'Run Extension';
+  statusBarItem.tooltip = 'Click to run the extension';
+
+  // Register a command to run when the item is clicked
+  const commandId = 'extension.toggleExtension';
+  const disposable = vscode.commands.registerCommand(commandId, () => {
+    // Logic to toggle the extension's functionality on and off
+    if (extensionIsActive) {
+      // Deactivate the extension and update the status bar item
+      deactivateExtension();
+      statusBarItem.text = 'Run Extension';
+      extensionIsActive = false;
+    } else {
+      // Activate the extension and update the status bar item
+      activateExtension();
+      statusBarItem.text = 'Stop Extension';
+      extensionIsActive = true;
+    }
+  });
+  context.subscriptions.push(disposable);
+  
+  // Set the command to be run when the item is clicked
+  statusBarItem.command = commandId;
+  
+  // Show the status bar item
+  statusBarItem.show();
+
   let activeEditor = vscode.window.activeTextEditor;
-  if (activeEditor) {
-    updateDecorations(); // Run on activation
+
+  function activateExtension() {
+    extensionIsActive = true;
+    if (activeEditor) {
+      updateDecorations(); // Run when activated
+    }
+    registerListeners(context, updateDecorations); // You should have this function in your listeners.ts
   }
 
-  vscode.window.onDidChangeActiveTextEditor(editor => {
-    activeEditor = editor;
-    if (editor) {
-      updateDecorations();
+  function deactivateExtension() {
+    extensionIsActive = false;
+    // Clear all decorations
+    for (const decorationType of decorationTypes) {
+      decorationType.dispose();
     }
-  }, null, context.subscriptions);
-
-  vscode.workspace.onDidChangeTextDocument(event => {
-    if (activeEditor && event.document === activeEditor.document) {
-      updateDecorations();
-    }
-  }, null, context.subscriptions);
+    decorationTypes = []; // Reset the array
+  }
 
   function updateDecorations() {
-    if (!activeEditor) {
+    if (!activeEditor || !extensionIsActive) {
       return;
     }
 
     const text = activeEditor.document.getText();
-    const pattern = /--[a-zA-Z0-9-]+:\s*(\d{1,3}(?:\.\d{1,3})?(?:deg)?\s+\d{1,3}(?:\.\d{1,3})?%\s+\d{1,3}(?:\.\d{1,3})?%)(?=\s*;?)/g;
-    let match;
-
-    while ((match = pattern.exec(text))) {
-      const startPos = activeEditor.document.positionAt(match.index);
-      const endPos = activeEditor.document.positionAt(match.index + match[0].length);
-      const hslMatch = match[1].split(' ');
-
-      // Extracting HSL values
-      const hue = parseFloat(hslMatch[0]);
-      const saturation = parseFloat(hslMatch[1]);
-      const lightness = parseFloat(hslMatch[2]);
-
-      // Converting HSL to CSS format
-      const hslColor = `hsl(${hue}, ${saturation}%, ${lightness}%)`;
-
-      // Determine text color based on lightness
-      const textColor = lightness > 50 ? 'black' : 'white';
-
+    
+    const matches = [...text.matchAll(HSL_PATTERN)];
+    console.log(matches.length)
+    for (const match of matches) {
+     
+      const startPos = activeEditor.document.positionAt(match.index!);
+      const endPos = activeEditor.document.positionAt(match.index! + match[0].length);
+      const { backgroundColor, color } = getColors(match[1]);
+      
       const decorationType = vscode.window.createTextEditorDecorationType({
-        backgroundColor: hslColor,
-        color: textColor,
+        backgroundColor: backgroundColor,
+        color: color,
       });
-      const decoration = { range: new vscode.Range(startPos, endPos) };
-      activeEditor.setDecorations(decorationType, [decoration]);
+      decorationTypes.push(decorationType); // Keep track of the decoration type
+      const range = { range: new vscode.Range(startPos, endPos) };
+      activeEditor.setDecorations(decorationType, [range]);
     }
   }
 }
