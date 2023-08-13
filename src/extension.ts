@@ -61,6 +61,9 @@ export function activate(context: vscode.ExtensionContext) {
       return;
     }
 
+        // Dispose of previous decoration types
+    decorationTypes.forEach(decorationType => decorationType.dispose());
+    decorationTypes = [];
     const text = activeEditor.document.getText();
     
     const matches = [...text.matchAll(HSL_PATTERN)];
