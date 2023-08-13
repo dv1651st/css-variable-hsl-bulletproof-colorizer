@@ -10,11 +10,11 @@
     "Other"
   ],
   "activationEvents": [
-    "onLanguage:css",
-    "onLanguage:postcss"
+    "onLanguage: css",
+    "onLanguage: scss",
+    "onLanguage: postcss"
   ],
   "main": "./dist/extension.js",
-  
   "scripts": {
     "vscode:prepublish": "npm run package",
     "compile": "webpack",
@@ -24,7 +24,8 @@
     "watch-tests": "tsc -p . -w --outDir out",
     "pretest": "npm run compile-tests && npm run compile && npm run lint",
     "lint": "eslint src --ext ts",
-    "test": "node ./out/test/runTest.js"
+    "test": "node ./out/test/runTest.js",
+    "prebuild": "node generatePackageJson.js"
   },
   "devDependencies": {
     "@types/vscode": "^1.81.0",
@@ -43,8 +44,55 @@
     "@vscode/test-electron": "^2.3.2"
   },
   "repository": {
-  "type": "git",
-  "url": "https://github.com/dv1651st/css-variable-hsl-bulletproof-colorizer.git"
+    "type": "git",
+    "url": "https://github.com/dv1651st/css-variable-hsl-bulletproof-colorizer.git"
+  },
+  "contributes": {
+    "commands": [
+      {
+        "command": "extension.colorHSL",
+        "title": "Color HSL",
+        "category": "HSL Coloring"
+      },
+      {
+        "command": "extension.removeHSLColoring",
+        "title": "Remove HSL Coloring",
+        "category": "HSL Coloring"
+      }
+    ],
+    "menus": {
+      "editor/context": [
+        {
+          "command": "extension.colorHSL",
+          "when": "editorLangId == css && !isHslColoringApplied",
+          "group": "navigation"
+        },
+        {
+          "command": "extension.colorHSL",
+          "when": "editorLangId == scss && !isHslColoringApplied",
+          "group": "navigation"
+        },
+        {
+          "command": "extension.colorHSL",
+          "when": "editorLangId == postcss && !isHslColoringApplied",
+          "group": "navigation"
+        },
+        {
+          "command": "extension.removeHSLColoring",
+          "when": "editorLangId == css && isHslColoringApplied",
+          "group": "navigation"
+        },
+        {
+          "command": "extension.removeHSLColoring",
+          "when": "editorLangId == scss && isHslColoringApplied",
+          "group": "navigation"
+        },
+        {
+          "command": "extension.removeHSLColoring",
+          "when": "editorLangId == postcss && isHslColoringApplied",
+          "group": "navigation"
+        }
+      ]
+    }
   }
-
 }
