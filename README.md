@@ -6,8 +6,11 @@ The "CSS Variable HSL Bulletproof Colorizer" is a Visual Studio Code extension d
 
 ## Features
 
+* ***NEW* **- **Context Menu Commands** : Enables users to apply or remove
+  color decorations through context menu options, with intelligent
+  visibility based on file type and coloring state.
 * **Color Highlighting** : Automatically highlights HSL color values in CSS files with their corresponding color.
-* **Toggle Functionality** : Ability to enable or disable the color highlighting through a button on the bottom panel.
+* ~~**Toggle Functionality** : Ability to enable or disable the color highlighting through a button on the bottom panel.~~
 
 ## Installation
 
